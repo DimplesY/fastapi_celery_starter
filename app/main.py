@@ -1,13 +1,14 @@
+from contextlib import asynccontextmanager
 from http import HTTPStatus
 
 from fastapi import FastAPI, HTTPException
+from fastapi_pagination import add_pagination
+from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from app.api import router
-from contextlib import asynccontextmanager
-from fastapi_pagination import add_pagination
 
+from app.api import router
 from app.services.util import initialize_services
 
 
@@ -18,7 +19,10 @@ def get_lifespan():
             await initialize_services()
             yield
         except Exception as exc:
-            raise RuntimeError(f"Unexpected error: {exc}") from exc
+            logger.exception(exc)
+            raise
+        finally:
+            await logger.complete()
 
     return lifespan
 
